@@ -1,12 +1,9 @@
 package com.paymenthub.payment_service.domain.events;
 
-public class PaymentVoidedEvent extends DomainEvent {
-    private final String paymentId;
-    // private final String reason;
+@EventType("payment.voided")
+public class PaymentVoidedEvent extends PaymentEvent {
 
     public PaymentVoidedEvent(String paymentId) {
-        super();
-        this.paymentId = paymentId;
-        // this.reason = reason;
+        super(paymentId);
     }
 }
