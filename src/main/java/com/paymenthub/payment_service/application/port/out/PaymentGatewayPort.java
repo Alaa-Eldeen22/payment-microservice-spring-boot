@@ -8,7 +8,7 @@ public interface PaymentGatewayPort {
 
     CaptureResult capturePayment(String gatewayTransactionId, Money amount);
 
-    VoidResult voidAuthorization(String gatewayTransactionId);
+    VoidResult   voidAuthorization(String gatewayTransactionId);
 
     RefundResult refundPajyment(String gatewayTransactionId, Money amount);
 }

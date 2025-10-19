@@ -1,11 +1,5 @@
 package com.paymenthub.payment_service.domain.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AccessLevel;
-
-import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,45 +18,24 @@ import com.paymenthub.payment_service.domain.exception.PaymentExpiredException;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
 
-@Entity
-@Table(name = "payments")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
-    @Id
     private String id;
-
-    @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "invoice_id"))
     private InvoiceId invoiceId;
-
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "amount", column = @Column(name = "authorized_amount")),
-            @AttributeOverride(name = "currency", column = @Column(name = "currency"))
-    })
     private Money authorizedAmount;
-
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "amount", column = @Column(name = "captured_amount")),
-            @AttributeOverride(name = "currency", column = @Column(name = "captured_currency"))
-    })
     private Money capturedAmount;
-
-    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
-
     private String stripePaymentIntentId;
     private LocalDateTime createdAt;
     private LocalDateTime authorizedAt;
     private LocalDateTime capturedAt;
     private LocalDateTime expiresAt;
 
-    // Domain Events (not persisted)
-    @Transient
     private List<DomainEvent> domainEvents = new ArrayList<>();
+
+    // Protected constructor
+    private Payment() {
+    }
 
     // Factory method
     public static Payment createPendingPayment(InvoiceId invoiceId, Money amount) {
@@ -167,5 +140,46 @@ public class Payment {
                     String.format("Capture amount %s exceeds remaining authorization %s",
                             captureAmount.getAmount(), remainingAmount.getAmount()));
         }
+    }
+
+    // Getters
+    public String getId() {
+        return id;
+    }
+
+    public InvoiceId getInvoiceId() {
+        return invoiceId;
+    }
+
+    public Money getAuthorizedAmount() {
+        return authorizedAmount;
+    }
+
+    public Money getCapturedAmount() {
+        return capturedAmount;
+    }
+
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getAuthorizedAt() {
+        return authorizedAt;
+    }
+
+    public LocalDateTime getCapturedAt() {
+        return capturedAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
     }
 }

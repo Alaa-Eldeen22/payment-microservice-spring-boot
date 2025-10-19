@@ -13,6 +13,8 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(String id);
 
+    boolean existsByInvoiceId(String invoiceId);
+
     Optional<Payment> findByInvoiceId(InvoiceId invoiceId);
 
     List<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
