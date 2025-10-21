@@ -182,4 +182,53 @@ public class Payment {
     public LocalDateTime getExpiresAt() {
         return expiresAt;
     }
+
+    private Payment(String id,
+            InvoiceId invoiceId,
+            Money authorizedAmount,
+            Money capturedAmount,
+            PaymentStatus status,
+            String stripePaymentIntentId,
+            LocalDateTime createdAt,
+            LocalDateTime authorizedAt,
+            LocalDateTime capturedAt,
+            LocalDateTime expiresAt,
+            List<DomainEvent> domainEvents) {
+        this.id = id;
+        this.invoiceId = invoiceId;
+        this.authorizedAmount = authorizedAmount;
+        this.capturedAmount = capturedAmount != null ? capturedAmount
+                : new Money(BigDecimal.ZERO, authorizedAmount.getCurrencyCode());
+        this.status = status;
+        this.stripePaymentIntentId = stripePaymentIntentId;
+        this.createdAt = createdAt;
+        this.authorizedAt = authorizedAt;
+        this.capturedAt = capturedAt;
+        this.expiresAt = expiresAt;
+        this.domainEvents = domainEvents != null ? domainEvents : new ArrayList<>();
+    }
+
+    public static Payment reconstitute(String id,
+            InvoiceId invoiceId,
+            Money authorizedAmount,
+            Money capturedAmount,
+            PaymentStatus status,
+            String stripePaymentIntentId,
+            LocalDateTime createdAt,
+            LocalDateTime authorizedAt,
+            LocalDateTime capturedAt,
+            LocalDateTime expiresAt) {
+        return new Payment(
+                id,
+                invoiceId,
+                authorizedAmount,
+                capturedAmount,
+                status,
+                stripePaymentIntentId,
+                createdAt,
+                authorizedAt,
+                capturedAt,
+                expiresAt,
+                null);
+    }
 }

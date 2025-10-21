@@ -1,8 +1,9 @@
 package com.paymenthub.payment_service.application.port.in.usecase;
 
-import com.paymenthub.payment_service.application.dto.response.PaymentResponse;
 import java.util.List;
 
+import com.paymenthub.payment_service.application.dto.result.PaymentResult;
+
 public interface GetPaymentsByInvoiceUseCase {
-    List<PaymentResponse> getPaymentsByInvoice(String invoiceId);
+    List<PaymentResult> getPaymentsByInvoice(String invoiceId);
 }

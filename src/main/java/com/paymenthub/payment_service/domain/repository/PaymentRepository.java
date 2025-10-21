@@ -10,10 +10,10 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(String id);
 
-    boolean existsByInvoiceId(String invoiceId);
+    boolean existsByInvoiceId(InvoiceId invoiceId);
 
     Optional<Payment> findByInvoiceId(InvoiceId invoiceId);
 
-    List<Payment> findAllByInvoiceId(String invoiceId);
+    List<Payment> findAllByInvoiceId(InvoiceId invoiceId);
 
 }

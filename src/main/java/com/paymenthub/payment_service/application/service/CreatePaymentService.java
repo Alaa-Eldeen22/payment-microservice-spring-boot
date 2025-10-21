@@ -1,7 +1,7 @@
 package com.paymenthub.payment_service.application.service;
 
+import com.paymenthub.payment_service.application.dto.result.PaymentResult;
 import com.paymenthub.payment_service.application.port.in.command.CreatePaymentCommand;
-import com.paymenthub.payment_service.application.port.in.result.PaymentResult;
 import com.paymenthub.payment_service.application.port.in.usecase.CreatePaymentUseCase;
 import com.paymenthub.payment_service.application.port.out.EventBus;
 import com.paymenthub.payment_service.domain.entity.Payment;
@@ -27,7 +27,7 @@ public class CreatePaymentService implements CreatePaymentUseCase {
     @Transactional
     public PaymentResult createPayment(CreatePaymentCommand command) {
 
-        List<Payment> existingPayments = paymentRepository.findAllByInvoiceId(command.invoiceId());
+        List<Payment> existingPayments = paymentRepository.findAllByInvoiceId(new InvoiceId(command.invoiceId()));
 
         if (existingPayments.size() > 10) {
             throw new TooManyPaymentAttemptsException(
@@ -56,12 +56,6 @@ public class CreatePaymentService implements CreatePaymentUseCase {
             savedPayment.clearDomainEvents();
         }
 
-        return PaymentResult.from(
-                savedPayment.getId(),
-                savedPayment.getInvoiceId().getValue(),
-                savedPayment.getAuthorizedAmount().getAmount(),
-                savedPayment.getAuthorizedAmount().getCurrencyCode(),
-                savedPayment.getStatus(),
-                savedPayment.getCreatedAt());
+        return PaymentResult.fromDomain(savedPayment);
     }
 }

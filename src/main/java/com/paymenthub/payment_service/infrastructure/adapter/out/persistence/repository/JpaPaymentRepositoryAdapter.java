@@ -32,8 +32,8 @@ class JpaPaymentRepositoryAdapter implements PaymentRepository {
     }
 
     @Override
-    public boolean existsByInvoiceId(String invoiceId) {
-        return jpaPaymentRepository.existsByInvoiceId(invoiceId);
+    public boolean existsByInvoiceId(InvoiceId invoiceId) {
+        return jpaPaymentRepository.existsByInvoiceId(invoiceId.getValue());
     }
 
     @Override
@@ -43,8 +43,8 @@ class JpaPaymentRepositoryAdapter implements PaymentRepository {
     }
 
     @Override
-    public List<Payment> findAllByInvoiceId(String invoiceId) {
-        return jpaPaymentRepository.findAllByInvoiceId(invoiceId)
+    public List<Payment> findAllByInvoiceId(InvoiceId invoiceId) {
+        return jpaPaymentRepository.findAllByInvoiceId(invoiceId.getValue())
                 .stream()
                 .map(paymentMapper::toDomainEntity)
                 .toList();
