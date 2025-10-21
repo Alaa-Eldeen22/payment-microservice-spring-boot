@@ -35,4 +35,13 @@ public enum PaymentStatus {
     public boolean canBeRefunded() {
         return this == CAPTURED || this == PARTIALLY_REFUNDED;
     }
+
+    private boolean isTerminalState() {
+        return this == FAILED || this == VOIDED || this == REFUNDED || this == PARTIALLY_REFUNDED;
+    }
+
+    public boolean isActivePayment() {
+        return !isTerminalState();
+    }
+
 }

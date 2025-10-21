@@ -1,5 +1,6 @@
 package com.paymenthub.payment_service.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 import com.paymenthub.payment_service.domain.entity.Payment;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
@@ -12,5 +13,7 @@ public interface PaymentRepository {
     boolean existsByInvoiceId(String invoiceId);
 
     Optional<Payment> findByInvoiceId(InvoiceId invoiceId);
+
+    List<Payment> findAllByInvoiceId(String invoiceId);
 
 }

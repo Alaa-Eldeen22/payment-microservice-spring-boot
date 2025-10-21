@@ -8,6 +8,8 @@ import com.paymenthub.payment_service.infrastructure.adapter.out.persistence.map
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -38,6 +40,14 @@ class JpaPaymentRepositoryAdapter implements PaymentRepository {
     public Optional<Payment> findByInvoiceId(InvoiceId invoiceId) {
         return Optional.ofNullable(jpaPaymentRepository.findByInvoiceId(invoiceId.getValue()))
                 .map(paymentMapper::toDomainEntity);
+    }
+
+    @Override
+    public List<Payment> findAllByInvoiceId(String invoiceId) {
+        return jpaPaymentRepository.findAllByInvoiceId(invoiceId)
+                .stream()
+                .map(paymentMapper::toDomainEntity)
+                .toList();
     }
 
 }

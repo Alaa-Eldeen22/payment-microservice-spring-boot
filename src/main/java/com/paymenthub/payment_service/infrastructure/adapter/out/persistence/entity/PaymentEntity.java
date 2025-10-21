@@ -16,7 +16,7 @@ public class PaymentEntity {
     @Id
     private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String invoiceId;
 
     @Column(nullable = false, precision = 19, scale = 4)
