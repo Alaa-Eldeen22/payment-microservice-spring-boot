@@ -1,7 +1,7 @@
 package com.paymenthub.payment_service.application.port.in.usecase;
 
-import com.paymenthub.payment_service.application.dto.response.PaymentResponse;
+import com.paymenthub.payment_service.application.dto.result.PaymentResult;
 
 public interface GetPaymentUseCase {
-    PaymentResponse execute(String paymentId);
+    PaymentResult getPaymentById(String paymentId);
 }
