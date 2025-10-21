@@ -1,5 +1,6 @@
 HELP.md
 project-structure.txt
+.env
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
