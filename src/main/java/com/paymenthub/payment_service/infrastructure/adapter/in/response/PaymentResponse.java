@@ -11,13 +11,12 @@ import com.paymenthub.payment_service.application.dto.result.PaymentResult;
 @Builder
 public class PaymentResponse {
     String id;
-    // String invoiceId;
+    String invoiceId;
     BigDecimal authorizedAmount;
     BigDecimal capturedAmount;
     BigDecimal remainingAmount;
     String currency;
     String status;
-    // String stripePaymentIntentId;
     LocalDateTime authorizedAt;
     LocalDateTime capturedAt;
     LocalDateTime expiresAt;
@@ -25,7 +24,7 @@ public class PaymentResponse {
     public static PaymentResponse fromResult(PaymentResult result) {
         return PaymentResponse.builder()
                 .id(result.paymentId())
-                // .invoiceId(result.invoiceId())
+                .invoiceId(result.invoiceId())
                 .authorizedAmount(result.amount())
                 .currency(result.currency())
                 .status(result.status().name())

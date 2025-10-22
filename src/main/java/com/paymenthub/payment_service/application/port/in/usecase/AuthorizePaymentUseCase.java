@@ -1,8 +1,8 @@
 package com.paymenthub.payment_service.application.port.in.usecase;
 
-import com.paymenthub.payment_service.application.dto.request.AuthorizePaymentRequest;
-import com.paymenthub.payment_service.application.dto.response.AuthorizationResponse;
+import com.paymenthub.payment_service.application.dto.result.PaymentResult;
+import com.paymenthub.payment_service.application.port.in.command.AuthorizePaymentCommand;
 
 public interface AuthorizePaymentUseCase {
-    AuthorizationResponse execute(AuthorizePaymentRequest request);
+    PaymentResult authorize(AuthorizePaymentCommand command);
 }

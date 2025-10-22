@@ -22,7 +22,7 @@ public class PaymentMapper {
                 authorized,
                 captured,
                 entity.getStatus(),
-                entity.getStripePaymentIntentId(),
+                entity.getPaymentGatewayReferenceId(),
                 entity.getCreatedAt(),
                 entity.getAuthorizedAt(),
                 entity.getCapturedAt(),
@@ -37,7 +37,7 @@ public class PaymentMapper {
         entity.setCapturedAmount(payment.getCapturedAmount() != null ? payment.getCapturedAmount().getAmount() : null);
         entity.setCurrency(payment.getAuthorizedAmount().getCurrencyCode());
         entity.setStatus(payment.getStatus());
-        entity.setStripePaymentIntentId(payment.getStripePaymentIntentId());
+        entity.setPaymentGatewayReferenceId(payment.getPaymentGatewayReferenceId());
         entity.setCreatedAt(payment.getCreatedAt());
         entity.setAuthorizedAt(payment.getAuthorizedAt());
         entity.setCapturedAt(payment.getCapturedAt());

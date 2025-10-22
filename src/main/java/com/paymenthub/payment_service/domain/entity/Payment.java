@@ -25,7 +25,7 @@ public class Payment {
     private Money authorizedAmount;
     private Money capturedAmount;
     private PaymentStatus status;
-    private String stripePaymentIntentId;
+    private String paymentGatewayReferenceId;
     private LocalDateTime createdAt;
     private LocalDateTime authorizedAt;
     private LocalDateTime capturedAt;
@@ -33,11 +33,11 @@ public class Payment {
 
     private List<DomainEvent> domainEvents = new ArrayList<>();
 
-    // Protected constructor
+    private static final long AUTHORIZATION_EXPIRY_DAYS = 7;
+
     private Payment() {
     }
 
-    // Factory method
     public static Payment createPendingPayment(InvoiceId invoiceId, Money amount) {
         Payment payment = new Payment();
         payment.id = UUID.randomUUID().toString();
@@ -49,17 +49,16 @@ public class Payment {
         return payment;
     }
 
-    // Business methods
-    public void authorize(String stripePaymentIntentId) {
+    public void authorize(String paymentGatewayReferenceId) {
         if (!status.canBeAuthorized()) {
             throw new IllegalPaymentStateException(
                     String.format("Cannot authorize payment in status: %s", status));
         }
 
-        this.stripePaymentIntentId = stripePaymentIntentId;
+        this.paymentGatewayReferenceId = paymentGatewayReferenceId;
         this.status = PaymentStatus.AUTHORIZED;
         this.authorizedAt = LocalDateTime.now();
-        this.expiresAt = authorizedAt.plusDays(7); // Stripe default
+        this.expiresAt = authorizedAt.plusDays(AUTHORIZATION_EXPIRY_DAYS);
 
         addDomainEvent(new PaymentAuthorizedEvent(
                 this.id,
@@ -75,7 +74,6 @@ public class Payment {
         this.capturedAmount = newTotalCaptured;
         this.capturedAt = LocalDateTime.now();
 
-        // Update status based on capture amount
         if (newTotalCaptured.getAmount().equals(authorizedAmount.getAmount())) {
             this.status = PaymentStatus.CAPTURED;
         } else {
@@ -163,8 +161,8 @@ public class Payment {
         return status;
     }
 
-    public String getStripePaymentIntentId() {
-        return stripePaymentIntentId;
+    public String getPaymentGatewayReferenceId() {
+        return paymentGatewayReferenceId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -188,7 +186,7 @@ public class Payment {
             Money authorizedAmount,
             Money capturedAmount,
             PaymentStatus status,
-            String stripePaymentIntentId,
+            String paymentGatewayReferenceId,
             LocalDateTime createdAt,
             LocalDateTime authorizedAt,
             LocalDateTime capturedAt,
@@ -200,7 +198,7 @@ public class Payment {
         this.capturedAmount = capturedAmount != null ? capturedAmount
                 : new Money(BigDecimal.ZERO, authorizedAmount.getCurrencyCode());
         this.status = status;
-        this.stripePaymentIntentId = stripePaymentIntentId;
+        this.paymentGatewayReferenceId = paymentGatewayReferenceId;
         this.createdAt = createdAt;
         this.authorizedAt = authorizedAt;
         this.capturedAt = capturedAt;
@@ -213,7 +211,7 @@ public class Payment {
             Money authorizedAmount,
             Money capturedAmount,
             PaymentStatus status,
-            String stripePaymentIntentId,
+            String paymentGatewayReferenceId,
             LocalDateTime createdAt,
             LocalDateTime authorizedAt,
             LocalDateTime capturedAt,
@@ -224,7 +222,7 @@ public class Payment {
                 authorizedAmount,
                 capturedAmount,
                 status,
-                stripePaymentIntentId,
+                paymentGatewayReferenceId,
                 createdAt,
                 authorizedAt,
                 capturedAt,

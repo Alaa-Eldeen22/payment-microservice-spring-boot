@@ -1,6 +1,9 @@
 package com.paymenthub.payment_service.infrastructure.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,8 +18,11 @@ public class RabbitMQConfig {
     @Value("${INVOICE_QUEUE:invoice_events}")
     private String queueName;
 
-    @Value("${INVOICE_ROUTING_KEY:invoice.created}")
-    private String routingKey;
+    @Value("${INVOICE_CREATED_ROUTING_KEY:invoice.created}")
+    private String invoiceCreatedRoutingKey;
+
+    @Value("${INVOICE_RETRY_ROUTING_KEY:invoice.retry}")
+    private String invoiceRetryRoutingKey;
 
     @Bean
     public TopicExchange invoiceExchange() {
@@ -29,11 +35,19 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding binding(Queue invoiceQueue, TopicExchange invoiceExchange) {
+    public Binding invoiceCreatedBinding(Queue invoiceQueue, TopicExchange invoiceExchange) {
         return BindingBuilder
                 .bind(invoiceQueue)
                 .to(invoiceExchange)
-                .with(routingKey);
+                .with(invoiceCreatedRoutingKey);
+    }
+
+    @Bean
+    public Binding invoiceRetryBinding(Queue invoiceQueue, TopicExchange invoiceExchange) {
+        return BindingBuilder
+                .bind(invoiceQueue)
+                .to(invoiceExchange)
+                .with(invoiceRetryRoutingKey);
     }
 
     @Bean

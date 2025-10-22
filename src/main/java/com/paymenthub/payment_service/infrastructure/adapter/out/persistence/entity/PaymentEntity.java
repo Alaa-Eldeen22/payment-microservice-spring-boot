@@ -32,7 +32,7 @@ public class PaymentEntity {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    private String stripePaymentIntentId;
+    private String paymentGatewayReferenceId;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
