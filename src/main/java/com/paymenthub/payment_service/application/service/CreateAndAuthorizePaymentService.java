@@ -7,6 +7,7 @@ import com.paymenthub.payment_service.application.port.in.usecase.CreateAndAutho
 import com.paymenthub.payment_service.application.port.out.EventBus;
 import com.paymenthub.payment_service.application.port.out.PaymentGateway;
 import com.paymenthub.payment_service.domain.entity.Payment;
+import com.paymenthub.payment_service.domain.exception.DuplicatePaymentException;
 import com.paymenthub.payment_service.domain.exception.TooManyPaymentAttemptsException;
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
@@ -20,10 +21,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Automatic payment flow service
- * Creates payment and immediately attempts authorization with gateway
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -35,11 +32,13 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
 
     @Override
     @Transactional
-    public PaymentResult execute(CreateAndAuthorizePaymentCommand command) {
+    public PaymentResult createAndAuthorize(CreateAndAuthorizePaymentCommand command) {
+        // TODO: Use an injected logger
+
         log.info("Creating and authorizing payment for invoice: {}", command.invoiceId());
 
-        // 1. Check for active payment (prevent duplicates)
         InvoiceId invoiceId = new InvoiceId(command.invoiceId());
+
         List<Payment> existingPayments = paymentRepository.findAllByInvoiceId(new InvoiceId(command.invoiceId()));
 
         if (existingPayments.size() > 10) {
@@ -47,16 +46,24 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
                     "Invoice has exceeded maximum payment attempts. Please contact support.");
         }
 
-        // 2. Create Value Objects
+        boolean hasActivePayment = existingPayments.stream()
+                .anyMatch(payment -> payment.getStatus().isActivePayment());
+
+        if (hasActivePayment) {
+            throw new DuplicatePaymentException(
+                    String.format("An active payment already exists for invoice: %s. " +
+                            "Previous payment must be in a terminal state (FAILED, VOIDED, or REFUNDED) " +
+                            "before creating a new payment.", command.invoiceId()));
+        }
+
         Money amount = new Money(command.amount(), command.currency());
 
-        // 3. Create Payment (PENDING)
         Payment payment = Payment.createPendingPayment(invoiceId, amount);
+
         Payment savedPayment = paymentRepository.save(payment);
 
         log.info("Payment created: {} - attempting authorization", savedPayment.getId());
 
-        // 4. Call Payment Gateway to authorize
         try {
             String gatewayReferenceId = paymentGateway.authorize(
                     savedPayment.getId(),
@@ -65,7 +72,6 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
                     command.amount(),
                     command.currency());
 
-            // 5. Authorization succeeded
             savedPayment.authorize(gatewayReferenceId);
             paymentRepository.save(savedPayment);
 
@@ -73,7 +79,6 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
                     savedPayment.getId(), gatewayReferenceId);
 
         } catch (PaymentGatewayException e) {
-            // 6. Authorization failed (card declined, insufficient funds, etc.)
             log.error("Payment authorization failed for payment: {} - Reason: {}",
                     savedPayment.getId(), e.getMessage());
 
@@ -81,7 +86,6 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
             paymentRepository.save(savedPayment);
         }
 
-        // 7. Publish events (either AUTHORIZED or FAILED)
         if (!savedPayment.getDomainEvents().isEmpty()) {
             eventBus.publish(savedPayment.getDomainEvents());
             savedPayment.clearDomainEvents();

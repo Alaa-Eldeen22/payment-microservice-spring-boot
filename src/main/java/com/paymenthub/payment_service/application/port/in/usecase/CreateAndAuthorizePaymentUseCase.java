@@ -8,5 +8,5 @@ import com.paymenthub.payment_service.application.dto.result.PaymentResult;
  * Creates payment and immediately attempts authorization
  */
 public interface CreateAndAuthorizePaymentUseCase {
-    PaymentResult execute(CreateAndAuthorizePaymentCommand command);
+    PaymentResult createAndAuthorize(CreateAndAuthorizePaymentCommand command);
 }
