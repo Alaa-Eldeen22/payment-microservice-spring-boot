@@ -12,6 +12,7 @@ import com.paymenthub.payment_service.domain.exception.TooManyPaymentAttemptsExc
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
+import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,7 @@ public class RetryPaymentService implements RetryPaymentUseCase {
         Money amount = new Money(new BigDecimal(5), "USD");
 
         // 3. Create new payment (PENDING)
-        Payment payment = Payment.createPendingPayment(invoiceId, amount);
+        Payment payment = Payment.createPendingPayment(invoiceId, new PaymentMethodId(null), amount);
         Payment savedPayment = paymentRepository.save(payment);
 
         log.info("New payment created for retry: {}", savedPayment.getId());

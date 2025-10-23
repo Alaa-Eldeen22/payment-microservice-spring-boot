@@ -1,13 +1,39 @@
 package com.paymenthub.payment_service.domain.valueobject;
 
-public class PaymentMethodId {
+import java.util.Objects;
 
-    String value;
+public class PaymentMethodId {
+    private final String value;
 
     public PaymentMethodId(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Payment Method ID cannot be null or empty");
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("PaymentMethodId cannot be null or empty");
         }
-        this.value = value.trim();
+        this.value = value;
     }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof PaymentMethodId))
+            return false;
+        PaymentMethodId other = (PaymentMethodId) o;
+        return value.equals(other.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+
 }

@@ -19,6 +19,8 @@ public class PaymentEntity {
     @Column(nullable = false)
     private String invoiceId;
 
+    private String paymentMethodId;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal authorizedAmount;
 

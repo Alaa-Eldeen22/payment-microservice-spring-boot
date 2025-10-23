@@ -12,6 +12,7 @@ import com.paymenthub.payment_service.domain.exception.TooManyPaymentAttemptsExc
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
+import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,9 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
 
         Money amount = new Money(command.amount(), command.currency());
 
-        Payment payment = Payment.createPendingPayment(invoiceId, amount);
+        PaymentMethodId paymentMethodId = new PaymentMethodId(command.paymentMethodId());
+
+        Payment payment = Payment.createPendingPayment(invoiceId, paymentMethodId, amount);
 
         Payment savedPayment = paymentRepository.save(payment);
 

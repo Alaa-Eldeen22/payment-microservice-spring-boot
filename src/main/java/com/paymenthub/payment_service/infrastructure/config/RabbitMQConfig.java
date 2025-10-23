@@ -21,8 +21,8 @@ public class RabbitMQConfig {
     @Value("${INVOICE_CREATED_ROUTING_KEY:invoice.created}")
     private String invoiceCreatedRoutingKey;
 
-    @Value("${INVOICE_RETRY_ROUTING_KEY:invoice.retry}")
-    private String invoiceRetryRoutingKey;
+    @Value("${INVOICE_RETRIED_ROUTING_KEY:invoice.retried}")
+    private String invoiceRetriedRoutingKey;
 
     @Bean
     public TopicExchange invoiceExchange() {
@@ -43,11 +43,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding invoiceRetryBinding(Queue invoiceQueue, TopicExchange invoiceExchange) {
+    public Binding invoiceRetriedBinding(Queue invoiceQueue, TopicExchange invoiceExchange) {
         return BindingBuilder
                 .bind(invoiceQueue)
                 .to(invoiceExchange)
-                .with(invoiceRetryRoutingKey);
+                .with(invoiceRetriedRoutingKey);
     }
 
     @Bean

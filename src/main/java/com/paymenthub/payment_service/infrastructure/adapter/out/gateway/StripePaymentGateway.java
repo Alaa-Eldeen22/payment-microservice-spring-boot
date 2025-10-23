@@ -35,22 +35,18 @@ public class StripePaymentGateway implements PaymentGateway {
                     .putMetadata("payment_id", paymentId)
                     .build();
 
-            // PaymentIntent paymentIntent = PaymentIntent.create(params);
+            PaymentIntent paymentIntent = PaymentIntent.create(params);
 
-            // if (paymentIntent.getStatus().equals("succeeded")) {
-            // log.info("Stripe authorization succeeded: {}", paymentIntent.getId());
-            // return paymentIntent.getId();
-            // } else {
-            // throw new PaymentGatewayException(
-            // "Payment authorization failed with status: " + paymentIntent.getStatus());
-            // }
-            // Simulate successful authorization for this example
-            String simulatedPaymentIntentId = "pi_" + paymentId;
-            log.info("Stripe authorization succeeded: {}", simulatedPaymentIntentId);
-            return simulatedPaymentIntentId;
-            // TODO: Uncomment above and remove simulation when integrating with real Stripe
-            // API and catch StripeException
-        } catch (RuntimeException e) {
+            // Check status
+            if (paymentIntent.getStatus().equals("succeeded")) {
+                log.info("Stripe authorization succeeded: {}", paymentIntent.getId());
+                return paymentIntent.getId();
+            } else {
+                throw new PaymentGatewayException(
+                        "Payment authorization failed with status: " + paymentIntent.getStatus());
+            }
+
+        } catch (StripeException e) {
             log.error("Stripe API error: {}", e.getMessage());
             throw new PaymentGatewayException("Card declined: " + e.getMessage(), e);
         }

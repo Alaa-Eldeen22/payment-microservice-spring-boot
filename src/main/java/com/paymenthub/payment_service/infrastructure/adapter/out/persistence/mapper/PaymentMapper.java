@@ -3,6 +3,7 @@ package com.paymenthub.payment_service.infrastructure.adapter.out.persistence.ma
 import com.paymenthub.payment_service.domain.entity.Payment;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
+import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
 import com.paymenthub.payment_service.infrastructure.adapter.out.persistence.entity.PaymentEntity;
 
 import org.springframework.stereotype.Component;
@@ -16,17 +17,19 @@ public class PaymentMapper {
                 ? new Money(entity.getCapturedAmount(), entity.getCurrency())
                 : null;
 
-        return Payment.reconstitute(
-                entity.getId(),
-                new InvoiceId(entity.getInvoiceId()),
-                authorized,
-                captured,
-                entity.getStatus(),
-                entity.getPaymentGatewayReferenceId(),
-                entity.getCreatedAt(),
-                entity.getAuthorizedAt(),
-                entity.getCapturedAt(),
-                entity.getExpiresAt());
+        return Payment.builder()
+                .id(entity.getId())
+                .invoiceId(new InvoiceId(entity.getInvoiceId()))
+                .authorizedAmount(authorized)
+                .capturedAmount(captured)
+                .status(entity.getStatus())
+                .paymentGatewayReferenceId(entity.getPaymentGatewayReferenceId())
+                .createdAt(entity.getCreatedAt())
+                .authorizedAt(entity.getAuthorizedAt())
+                .capturedAt(entity.getCapturedAt())
+                .expiresAt(entity.getExpiresAt())
+                .paymentMethodId(new PaymentMethodId(entity.getPaymentMethodId()))
+                .build();
     }
 
     public PaymentEntity toJpaEntity(Payment payment) {
@@ -42,6 +45,7 @@ public class PaymentMapper {
         entity.setAuthorizedAt(payment.getAuthorizedAt());
         entity.setCapturedAt(payment.getCapturedAt());
         entity.setExpiresAt(payment.getExpiresAt());
+        entity.setPaymentMethodId(payment.getPaymentMethodId().getValue());
         return entity;
     }
 }

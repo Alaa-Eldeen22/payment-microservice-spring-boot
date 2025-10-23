@@ -16,12 +16,14 @@ import com.paymenthub.payment_service.domain.exception.IllegalPaymentStateExcept
 import com.paymenthub.payment_service.domain.exception.InsufficientAuthorizationException;
 import com.paymenthub.payment_service.domain.exception.PaymentExpiredException;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
+import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
 
 public class Payment {
 
     private String id;
     private InvoiceId invoiceId;
+    private PaymentMethodId paymentMethodId;
     private Money authorizedAmount;
     private Money capturedAmount;
     private PaymentStatus status;
@@ -38,11 +40,12 @@ public class Payment {
     private Payment() {
     }
 
-    public static Payment createPendingPayment(InvoiceId invoiceId, Money amount) {
+    public static Payment createPendingPayment(InvoiceId invoiceId, PaymentMethodId paymentMethodId, Money amount) {
         Payment payment = new Payment();
         payment.id = UUID.randomUUID().toString();
         payment.invoiceId = invoiceId;
         payment.authorizedAmount = amount;
+        payment.paymentMethodId = paymentMethodId;
         payment.capturedAmount = new Money(BigDecimal.ZERO, amount.getCurrencyCode());
         payment.status = PaymentStatus.PENDING;
         payment.createdAt = LocalDateTime.now();
@@ -149,6 +152,10 @@ public class Payment {
         return invoiceId;
     }
 
+    public PaymentMethodId getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
     public Money getAuthorizedAmount() {
         return authorizedAmount;
     }
@@ -181,52 +188,94 @@ public class Payment {
         return expiresAt;
     }
 
-    private Payment(String id,
-            InvoiceId invoiceId,
-            Money authorizedAmount,
-            Money capturedAmount,
-            PaymentStatus status,
-            String paymentGatewayReferenceId,
-            LocalDateTime createdAt,
-            LocalDateTime authorizedAt,
-            LocalDateTime capturedAt,
-            LocalDateTime expiresAt,
-            List<DomainEvent> domainEvents) {
-        this.id = id;
-        this.invoiceId = invoiceId;
-        this.authorizedAmount = authorizedAmount;
-        this.capturedAmount = capturedAmount != null ? capturedAmount
-                : new Money(BigDecimal.ZERO, authorizedAmount.getCurrencyCode());
-        this.status = status;
-        this.paymentGatewayReferenceId = paymentGatewayReferenceId;
-        this.createdAt = createdAt;
-        this.authorizedAt = authorizedAt;
-        this.capturedAt = capturedAt;
-        this.expiresAt = expiresAt;
-        this.domainEvents = domainEvents != null ? domainEvents : new ArrayList<>();
+    public static class Builder {
+        private String id;
+        private InvoiceId invoiceId;
+        private PaymentMethodId paymentMethodId;
+        private Money authorizedAmount;
+        private Money capturedAmount;
+        private PaymentStatus status;
+        private String paymentGatewayReferenceId;
+        private LocalDateTime createdAt;
+        private LocalDateTime authorizedAt;
+        private LocalDateTime capturedAt;
+        private LocalDateTime expiresAt;
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder invoiceId(InvoiceId invoiceId) {
+            this.invoiceId = invoiceId;
+            return this;
+        }
+
+        public Builder paymentMethodId(PaymentMethodId paymentMethodId) {
+            this.paymentMethodId = paymentMethodId;
+            return this;
+        }
+
+        public Builder authorizedAmount(Money authorizedAmount) {
+            this.authorizedAmount = authorizedAmount;
+            return this;
+        }
+
+        public Builder capturedAmount(Money capturedAmount) {
+            this.capturedAmount = capturedAmount;
+            return this;
+        }
+
+        public Builder status(PaymentStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public Builder paymentGatewayReferenceId(String paymentGatewayReferenceId) {
+            this.paymentGatewayReferenceId = paymentGatewayReferenceId;
+            return this;
+        }
+
+        public Builder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder authorizedAt(LocalDateTime authorizedAt) {
+            this.authorizedAt = authorizedAt;
+            return this;
+        }
+
+        public Builder capturedAt(LocalDateTime capturedAt) {
+            this.capturedAt = capturedAt;
+            return this;
+        }
+
+        public Builder expiresAt(LocalDateTime expiresAt) {
+            this.expiresAt = expiresAt;
+            return this;
+        }
+
+        public Payment build() {
+            Payment payment = new Payment();
+            payment.id = this.id;
+            payment.invoiceId = this.invoiceId;
+            payment.paymentMethodId = this.paymentMethodId;
+            payment.authorizedAmount = this.authorizedAmount;
+            payment.capturedAmount = this.capturedAmount != null ? this.capturedAmount
+                    : new Money(BigDecimal.ZERO, this.authorizedAmount.getCurrencyCode());
+            payment.status = this.status;
+            payment.paymentGatewayReferenceId = this.paymentGatewayReferenceId;
+            payment.createdAt = this.createdAt;
+            payment.authorizedAt = this.authorizedAt;
+            payment.capturedAt = this.capturedAt;
+            payment.expiresAt = this.expiresAt;
+            payment.domainEvents = new ArrayList<>();
+            return payment;
+        }
     }
 
-    public static Payment reconstitute(String id,
-            InvoiceId invoiceId,
-            Money authorizedAmount,
-            Money capturedAmount,
-            PaymentStatus status,
-            String paymentGatewayReferenceId,
-            LocalDateTime createdAt,
-            LocalDateTime authorizedAt,
-            LocalDateTime capturedAt,
-            LocalDateTime expiresAt) {
-        return new Payment(
-                id,
-                invoiceId,
-                authorizedAmount,
-                capturedAmount,
-                status,
-                paymentGatewayReferenceId,
-                createdAt,
-                authorizedAt,
-                capturedAt,
-                expiresAt,
-                null);
+    public static Builder builder() {
+        return new Builder();
     }
 }

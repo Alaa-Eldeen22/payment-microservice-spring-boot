@@ -7,9 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paymenthub.payment_service.application.port.in.command.CreateAndAuthorizePaymentCommand;
-import com.paymenthub.payment_service.application.port.in.command.CreatePaymentCommand;
 import com.paymenthub.payment_service.application.port.in.usecase.CreateAndAuthorizePaymentUseCase;
-import com.paymenthub.payment_service.application.port.in.usecase.CreatePaymentUseCase;
 import com.paymenthub.payment_service.domain.exception.DuplicatePaymentException;
 import com.paymenthub.payment_service.infrastructure.adapter.in.messaging.event.InvoiceCreatedEvent;
 
@@ -22,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RabbitInvoiceEventConsumer {
 
     private final CreateAndAuthorizePaymentUseCase createAndAuthorizePaymentUseCase;
-    private final CreatePaymentUseCase createPaymentUseCase;
+
     private final ObjectMapper objectMapper;
 
     @RabbitListener(queues = "invoice_events")
@@ -38,7 +36,7 @@ public class RabbitInvoiceEventConsumer {
                     handleInvoiceCreatedEvent(event);
                     break;
 
-                case "invoice.retry":
+                case "invoice.retried":
                     log.info("retry handler");
                     // Handle retry logic
                     break;
@@ -56,22 +54,15 @@ public class RabbitInvoiceEventConsumer {
     public void handleInvoiceCreatedEvent(InvoiceCreatedEvent event) {
         log.info("Received InvoiceCreatedEvent: invoiceId={}, amount={} {}",
                 event.invoiceId(), event.amount(), event.currency());
+
+        log.info("Payment id" + event.paymentMethodId());
         try {
             CreateAndAuthorizePaymentCommand command = new CreateAndAuthorizePaymentCommand(
                     event.invoiceId(),
                     event.customerId(),
                     event.amount(),
                     event.currency(),
-                    event.paymentMethodId()
-
-            );
-
-            // CreatePaymentCommand command = new CreatePaymentCommand(
-            // event.invoiceId(),
-            // event.amount(),
-            // event.currency());
-
-            // createPaymentUseCase.createPayment(command);
+                    event.paymentMethodId());
 
             createAndAuthorizePaymentUseCase.createAndAuthorize(command);
             log.info("Successfully created payment for invoice: {}", event.invoiceId());

@@ -10,6 +10,8 @@ import com.paymenthub.payment_service.domain.exception.TooManyPaymentAttemptsExc
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.Money;
+import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
+
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -45,9 +47,12 @@ public class CreatePaymentService implements CreatePaymentUseCase {
         }
 
         InvoiceId invoiceId = new InvoiceId(command.invoiceId());
+
+        PaymentMethodId paymentMethodId = new PaymentMethodId(command.paymentMethodId());
+
         Money amount = new Money(command.amount(), command.currency());
 
-        Payment payment = Payment.createPendingPayment(invoiceId, amount);
+        Payment payment = Payment.createPendingPayment(invoiceId,paymentMethodId, amount);
 
         Payment savedPayment = paymentRepository.save(payment);
 
