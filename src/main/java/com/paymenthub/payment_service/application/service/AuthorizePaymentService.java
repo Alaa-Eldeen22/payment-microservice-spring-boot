@@ -31,7 +31,7 @@ public class AuthorizePaymentService {
             payment.authorize(gatewayReferenceId);
             Payment savedPayment = paymentRepository.save(payment);
 
-            publishDomainEvents(savedPayment);
+            publishDomainEvents(payment);
 
             log.info("Payment ID: {} authorized successfully with gateway reference: {}",
                     savedPayment.getId(), gatewayReferenceId);
@@ -59,9 +59,11 @@ public class AuthorizePaymentService {
                 payment.getId(), exception.getMessage());
 
         payment.markAsFailed(exception.getMessage());
+        
+        publishDomainEvents(payment);
+
         paymentRepository.save(payment);
 
-        // publishDomainEvents(payment);
     }
 
     private void publishDomainEvents(Payment payment) {

@@ -1,7 +1,6 @@
 package com.paymenthub.payment_service.application.service;
 
 import com.paymenthub.payment_service.application.dto.result.PaymentResult;
-import com.paymenthub.payment_service.application.port.in.command.CreateAndAuthorizePaymentCommand;
 import com.paymenthub.payment_service.application.port.in.command.CreatePaymentCommand;
 import com.paymenthub.payment_service.application.port.in.usecase.CreateAndAuthorizePaymentUseCase;
 import com.paymenthub.payment_service.domain.entity.Payment;
@@ -21,7 +20,7 @@ public class CreateAndAuthorizePaymentService implements CreateAndAuthorizePayme
 
     @Override
     @Transactional
-    public PaymentResult createAndAuthorize(CreateAndAuthorizePaymentCommand command) {
+    public PaymentResult createAndAuthorize(CreatePaymentCommand command) {
 
         Payment pendingPayment = createPaymentService.create(new CreatePaymentCommand(
                 command.invoiceId(),

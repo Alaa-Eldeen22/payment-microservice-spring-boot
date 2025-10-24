@@ -68,9 +68,7 @@ public class Payment {
 
         addDomainEvent(new PaymentAuthorizedEvent(
                 this.id,
-                this.invoiceId.getValue(),
-                this.authorizedAmount.getAmount(),
-                this.authorizedAmount.getCurrencyCode()));
+                this.invoiceId.getValue()));
     }
 
     public void capture(Money captureAmount) {
@@ -103,8 +101,16 @@ public class Payment {
     }
 
     public void markAsFailed(String reason) {
+        if (this.status != PaymentStatus.PENDING) {
+            throw new IllegalPaymentStateException(
+                    String.format("Cannot mark payment as failed in status: %s", status));
+        }
+
         this.status = PaymentStatus.FAILED;
-        addDomainEvent(new PaymentFailedEvent(this.id, reason));
+        addDomainEvent(new PaymentFailedEvent(
+                this.id,
+                this.invoiceId.getValue(),
+                reason));
     }
 
     public Money getRemainingAuthorizationAmount() {

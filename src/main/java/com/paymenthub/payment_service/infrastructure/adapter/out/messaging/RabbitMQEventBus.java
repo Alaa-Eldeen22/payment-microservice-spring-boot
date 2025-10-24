@@ -17,7 +17,7 @@ public class RabbitMQEventBus implements EventBus {
 
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("invoidfdce_eventss")
+    @Value("${INVOICE_EXCHANGE:invoice_events}")
     private String paymentEventsExchange;
 
     @Override
@@ -25,9 +25,9 @@ public class RabbitMQEventBus implements EventBus {
         for (DomainEvent event : events) {
             try {
                 rabbitTemplate.convertAndSend(
-                paymentEventsExchange,
-                event.getEventType(), // routing key
-                event);
+                        paymentEventsExchange,
+                        event.getEventType(),
+                        event);
                 log.info("Published event: {} with ID: {}",
                         event.getEventType(), event.getEventId());
             } catch (Exception e) {

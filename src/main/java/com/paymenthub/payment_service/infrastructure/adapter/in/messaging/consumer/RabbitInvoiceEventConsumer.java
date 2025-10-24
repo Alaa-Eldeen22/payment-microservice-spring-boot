@@ -2,7 +2,7 @@ package com.paymenthub.payment_service.infrastructure.adapter.in.messaging.consu
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paymenthub.payment_service.application.exception.PaymentGatewayException;
-import com.paymenthub.payment_service.application.port.in.command.CreateAndAuthorizePaymentCommand;
+import com.paymenthub.payment_service.application.port.in.command.CreatePaymentCommand;
 import com.paymenthub.payment_service.application.port.in.usecase.CreateAndAuthorizePaymentUseCase;
 import com.paymenthub.payment_service.domain.exception.DuplicatePaymentException;
 import com.paymenthub.payment_service.infrastructure.adapter.in.messaging.event.InvoiceCreatedEvent;
@@ -79,14 +79,13 @@ public class RabbitInvoiceEventConsumer {
             String paymentMethodId,
             String eventType) {
         try {
-            CreateAndAuthorizePaymentCommand command = new CreateAndAuthorizePaymentCommand(
+
+            createAndAuthorizePaymentUseCase.createAndAuthorize(new CreatePaymentCommand(
                     invoiceId,
                     customerId,
                     amount,
                     currency,
-                    paymentMethodId);
-
-            createAndAuthorizePaymentUseCase.createAndAuthorize(command);
+                    paymentMethodId));
             log.info("Successfully processed {} payment for invoice: {}", eventType, invoiceId);
 
         } catch (DuplicatePaymentException e) {
