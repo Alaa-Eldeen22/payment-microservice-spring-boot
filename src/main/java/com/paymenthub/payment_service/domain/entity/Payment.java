@@ -24,6 +24,7 @@ public class Payment {
     private String id;
     private InvoiceId invoiceId;
     private PaymentMethodId paymentMethodId;
+    private Money requestedAmount;
     private Money authorizedAmount;
     private Money capturedAmount;
     private PaymentStatus status;
@@ -44,9 +45,10 @@ public class Payment {
         Payment payment = new Payment();
         payment.id = UUID.randomUUID().toString();
         payment.invoiceId = invoiceId;
-        payment.authorizedAmount = amount;
-        payment.paymentMethodId = paymentMethodId;
+        payment.requestedAmount = amount;
+        payment.authorizedAmount = new Money(BigDecimal.ZERO, amount.getCurrencyCode());
         payment.capturedAmount = new Money(BigDecimal.ZERO, amount.getCurrencyCode());
+        payment.paymentMethodId = paymentMethodId;
         payment.status = PaymentStatus.PENDING;
         payment.createdAt = LocalDateTime.now();
         return payment;
@@ -58,6 +60,7 @@ public class Payment {
                     String.format("Cannot authorize payment in status: %s", status));
         }
 
+        this.authorizedAmount = this.requestedAmount;
         this.paymentGatewayReferenceId = paymentGatewayReferenceId;
         this.status = PaymentStatus.AUTHORIZED;
         this.authorizedAt = LocalDateTime.now();
@@ -156,6 +159,10 @@ public class Payment {
         return paymentMethodId;
     }
 
+    public Money getRequestedAmount() {
+        return requestedAmount;
+    }
+
     public Money getAuthorizedAmount() {
         return authorizedAmount;
     }
@@ -192,6 +199,7 @@ public class Payment {
         private String id;
         private InvoiceId invoiceId;
         private PaymentMethodId paymentMethodId;
+        private Money requestedAmount;
         private Money authorizedAmount;
         private Money capturedAmount;
         private PaymentStatus status;
@@ -218,6 +226,11 @@ public class Payment {
 
         public Builder authorizedAmount(Money authorizedAmount) {
             this.authorizedAmount = authorizedAmount;
+            return this;
+        }
+
+        public Builder requestedAmount(Money requestedAmount) {
+            this.requestedAmount = requestedAmount;
             return this;
         }
 
@@ -261,6 +274,7 @@ public class Payment {
             payment.id = this.id;
             payment.invoiceId = this.invoiceId;
             payment.paymentMethodId = this.paymentMethodId;
+            payment.requestedAmount = this.requestedAmount;
             payment.authorizedAmount = this.authorizedAmount;
             payment.capturedAmount = this.capturedAmount != null ? this.capturedAmount
                     : new Money(BigDecimal.ZERO, this.authorizedAmount.getCurrencyCode());

@@ -22,6 +22,9 @@ public class PaymentEntity {
     private String paymentMethodId;
 
     @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal requestedAmount;
+
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal authorizedAmount;
 
     @Column(nullable = false, precision = 19, scale = 4)

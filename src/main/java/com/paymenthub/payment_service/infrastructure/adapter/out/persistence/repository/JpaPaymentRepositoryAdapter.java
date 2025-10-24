@@ -1,6 +1,7 @@
 package com.paymenthub.payment_service.infrastructure.adapter.out.persistence.repository;
 
 import com.paymenthub.payment_service.domain.entity.Payment;
+import com.paymenthub.payment_service.domain.enums.PaymentStatus;
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.infrastructure.adapter.out.persistence.entity.PaymentEntity;
@@ -48,6 +49,18 @@ class JpaPaymentRepositoryAdapter implements PaymentRepository {
                 .stream()
                 .map(paymentMapper::toDomainEntity)
                 .toList();
+    }
+
+    @Override
+    public int countByInvoiceId(InvoiceId invoiceId) {
+        return jpaPaymentRepository.countByInvoiceId(invoiceId.getValue());
+    }
+
+    @Override
+    public boolean existsByInvoiceIdAndStatusIn(InvoiceId invoiceId, List<PaymentStatus> statuses) {
+        return jpaPaymentRepository.existsByInvoiceIdAndStatusIn(
+                invoiceId.getValue(),
+                statuses);
     }
 
 }

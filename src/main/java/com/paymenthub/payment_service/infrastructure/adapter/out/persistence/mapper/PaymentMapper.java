@@ -13,6 +13,7 @@ public class PaymentMapper {
 
     public Payment toDomainEntity(PaymentEntity entity) {
         Money authorized = new Money(entity.getAuthorizedAmount(), entity.getCurrency());
+        Money requestedAmount = new Money(entity.getRequestedAmount(), entity.getCurrency());
         Money captured = entity.getCapturedAmount() != null
                 ? new Money(entity.getCapturedAmount(), entity.getCurrency())
                 : null;
@@ -20,6 +21,7 @@ public class PaymentMapper {
         return Payment.builder()
                 .id(entity.getId())
                 .invoiceId(new InvoiceId(entity.getInvoiceId()))
+                .requestedAmount(requestedAmount)
                 .authorizedAmount(authorized)
                 .capturedAmount(captured)
                 .status(entity.getStatus())
@@ -36,6 +38,7 @@ public class PaymentMapper {
         PaymentEntity entity = new PaymentEntity();
         entity.setId(payment.getId());
         entity.setInvoiceId(payment.getInvoiceId().getValue());
+        entity.setRequestedAmount(payment.getRequestedAmount().getAmount());
         entity.setAuthorizedAmount(payment.getAuthorizedAmount().getAmount());
         entity.setCapturedAmount(payment.getCapturedAmount() != null ? payment.getCapturedAmount().getAmount() : null);
         entity.setCurrency(payment.getAuthorizedAmount().getCurrencyCode());

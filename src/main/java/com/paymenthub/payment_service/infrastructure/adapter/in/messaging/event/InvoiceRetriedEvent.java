@@ -1,8 +1,9 @@
-package com.paymenthub.payment_service.application.port.in.command;
+package com.paymenthub.payment_service.infrastructure.adapter.in.messaging.event;
 
 import java.math.BigDecimal;
 
-public record CreatePaymentCommand(
+public record InvoiceRetriedEvent(
+                String eventId,
                 String invoiceId,
                 String customerId,
                 BigDecimal amount,

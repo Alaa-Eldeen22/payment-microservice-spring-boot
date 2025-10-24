@@ -1,48 +1,73 @@
 package com.paymenthub.payment_service.application.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.paymenthub.payment_service.application.dto.result.PaymentResult;
-import com.paymenthub.payment_service.application.exception.PaymentNotFoundException;
-import com.paymenthub.payment_service.application.port.in.command.AuthorizePaymentCommand;
-import com.paymenthub.payment_service.application.port.in.usecase.AuthorizePaymentUseCase;
+import com.paymenthub.payment_service.application.exception.PaymentGatewayException;
 import com.paymenthub.payment_service.application.port.out.EventBus;
+import com.paymenthub.payment_service.application.port.out.PaymentGateway;
 import com.paymenthub.payment_service.domain.entity.Payment;
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class AuthorizePaymentService implements AuthorizePaymentUseCase {
+public class AuthorizePaymentService {
 
     private final PaymentRepository paymentRepository;
     private final EventBus eventBus;
+    private final PaymentGateway paymentGateway;
 
-    @Override
     @Transactional
-    public PaymentResult authorize(AuthorizePaymentCommand command) {
-        log.info("Authorizing payment: {} with intent: {}",
-                command.paymentId(), command.paymentGatewayReferenceId());
+    protected Payment authorize(Payment payment) {
+        log.info("Starting authorization for payment ID: {}", payment.getId());
 
-        Payment payment = paymentRepository.findById(command.paymentId())
-                .orElseThrow(() -> new PaymentNotFoundException(
-                        "Payment not found with ID: " + command.paymentId()));
+        try {
+            String gatewayReferenceId = authorizeWithGateway(payment);
 
-        payment.authorize(command.paymentGatewayReferenceId());
+            payment.authorize(gatewayReferenceId);
+            Payment savedPayment = paymentRepository.save(payment);
 
-        Payment savedPayment = paymentRepository.save(payment);
+            publishDomainEvents(savedPayment);
 
-        if (!savedPayment.getDomainEvents().isEmpty()) {
-            eventBus.publish(savedPayment.getDomainEvents());
-            savedPayment.clearDomainEvents();
+            log.info("Payment ID: {} authorized successfully with gateway reference: {}",
+                    savedPayment.getId(), gatewayReferenceId);
+
+            return savedPayment;
+
+        } catch (PaymentGatewayException e) {
+            handleAuthorizationFailure(payment, e);
+            // throw e;
         }
+        return payment;
+    }
 
-        log.info("Payment authorized successfully: {} expires at: {}",
-                savedPayment.getId(), savedPayment.getExpiresAt());
+    private String authorizeWithGateway(Payment payment) {
+        return paymentGateway.authorize(
+                payment.getId(),
+                "", // TODO: Pass customer Id when added
+                payment.getPaymentMethodId().getValue(),
+                payment.getRequestedAmount().getAmount(),
+                payment.getRequestedAmount().getCurrency().toString());
+    }
 
-        return PaymentResult.fromDomain(savedPayment);
+    private void handleAuthorizationFailure(Payment payment, PaymentGatewayException exception) {
+        log.error("Authorization failed for payment ID: {} - Reason: {}",
+                payment.getId(), exception.getMessage());
+
+        payment.markAsFailed(exception.getMessage());
+        paymentRepository.save(payment);
+
+        // publishDomainEvents(payment);
+    }
+
+    private void publishDomainEvents(Payment payment) {
+        if (!payment.getDomainEvents().isEmpty()) {
+            eventBus.publish(payment.getDomainEvents());
+            payment.clearDomainEvents();
+        }
     }
 }

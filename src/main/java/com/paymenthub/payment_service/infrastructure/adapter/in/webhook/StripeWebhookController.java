@@ -7,10 +7,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.paymenthub.payment_service.application.port.in.command.AuthorizePaymentCommand;
-import com.paymenthub.payment_service.application.port.in.usecase.AuthorizePaymentUseCase;
 import com.stripe.model.Event;
-import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 
 import lombok.RequiredArgsConstructor;
@@ -22,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class StripeWebhookController {
-
-    private final AuthorizePaymentUseCase authorizePaymentUseCase;
 
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
@@ -52,37 +47,9 @@ public class StripeWebhookController {
     }
 
     private void handlePaymentIntentSucceeded(Event event) {
-        try {
-            // Parse Stripe PaymentIntent from event
-            PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer()
-                    .getObject()
-                    .orElseThrow(() -> new IllegalArgumentException("No PaymentIntent in event"));
-
-            // Extract our payment ID from metadata
-            String paymentId = paymentIntent.getMetadata().get("payment_id");
-            if (paymentId == null) {
-                log.error("No payment_id in PaymentIntent metadata");
-                return;
-            }
-
-            log.info("Payment Intent succeeded: {} for payment: {}",
-                    paymentIntent.getId(), paymentId);
-
-            // Create command
-            AuthorizePaymentCommand command = new AuthorizePaymentCommand(
-                    paymentId,
-                    paymentIntent.getId() // Stripe Payment Intent ID
-            );
-
-            // ← HERE: Call the authorize use case
-            authorizePaymentUseCase.authorize(command);
-
-            log.info("Payment authorized via webhook: {}", paymentId);
-
-        } catch (Exception e) {
-            log.error("Failed to handle payment_intent.succeeded", e);
-            // Consider: send to dead letter queue for retry
-        }
+        // Handle succeeded payments
+        log.info("Payment succeeded event received");
+        // TODO: Call martAsCapturedUseCase
     }
 
     private void handlePaymentIntentFailed(Event event) {
