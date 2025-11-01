@@ -40,9 +40,8 @@ public class AuthorizePaymentService {
 
         } catch (PaymentGatewayException e) {
             handleAuthorizationFailure(payment, e);
-            // throw e;
+            throw e;
         }
-        return payment;
     }
 
     private String authorizeWithGateway(Payment payment) {
@@ -59,7 +58,7 @@ public class AuthorizePaymentService {
                 payment.getId(), exception.getMessage());
 
         payment.markAsFailed(exception.getMessage());
-        
+
         publishDomainEvents(payment);
 
         paymentRepository.save(payment);

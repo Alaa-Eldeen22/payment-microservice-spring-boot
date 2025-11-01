@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.paymenthub.payment_service.application.dto.result.PaymentResult;
 import com.paymenthub.payment_service.application.port.in.usecase.GetPaymentUseCase;
-import com.paymenthub.payment_service.application.exception.PaymentNotFoundException;
+import com.paymenthub.payment_service.domain.exception.PaymentNotFoundException;
 import com.paymenthub.payment_service.domain.repository.PaymentRepository;
 
 import lombok.RequiredArgsConstructor;
