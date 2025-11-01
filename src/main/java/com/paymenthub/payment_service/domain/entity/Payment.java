@@ -13,7 +13,6 @@ import com.paymenthub.payment_service.domain.events.PaymentVoidedEvent;
 import com.paymenthub.payment_service.domain.events.PaymentCapturedEvent;
 import com.paymenthub.payment_service.domain.events.PaymentFailedEvent;
 import com.paymenthub.payment_service.domain.exception.IllegalPaymentStateException;
-import com.paymenthub.payment_service.domain.exception.InsufficientAuthorizationException;
 import com.paymenthub.payment_service.domain.exception.PaymentExpiredException;
 import com.paymenthub.payment_service.domain.valueobject.InvoiceId;
 import com.paymenthub.payment_service.domain.valueobject.PaymentMethodId;
@@ -71,23 +70,18 @@ public class Payment {
                 this.invoiceId.getValue()));
     }
 
-    public void capture(Money captureAmount) {
-        validateCaptureOperation(captureAmount);
+    public void capture() {
+        validateCaptureOperation();
 
-        Money newTotalCaptured = this.capturedAmount.add(captureAmount);
-        this.capturedAmount = newTotalCaptured;
+        this.capturedAmount = this.authorizedAmount;
         this.capturedAt = LocalDateTime.now();
 
-        if (newTotalCaptured.getAmount().equals(authorizedAmount.getAmount())) {
-            this.status = PaymentStatus.CAPTURED;
-        } else {
-            this.status = PaymentStatus.PARTIALLY_CAPTURED;
-        }
+        this.status = PaymentStatus.CAPTURED;
 
         addDomainEvent(new PaymentCapturedEvent(
                 this.id,
-                captureAmount.getAmount(),
-                newTotalCaptured.getAmount()));
+                this.invoiceId.getValue(),
+                this.capturedAt));
     }
 
     public void voidAuthorization() {
@@ -97,7 +91,7 @@ public class Payment {
         }
 
         this.status = PaymentStatus.VOIDED;
-        addDomainEvent(new PaymentVoidedEvent(this.id));
+        addDomainEvent(new PaymentVoidedEvent(this.id, this.invoiceId.getValue()));
     }
 
     public void markAsFailed(String reason) {
@@ -111,10 +105,6 @@ public class Payment {
                 this.id,
                 this.invoiceId.getValue(),
                 reason));
-    }
-
-    public Money getRemainingAuthorizationAmount() {
-        return authorizedAmount.subtract(capturedAmount);
     }
 
     public boolean isAuthorizationExpired() {
@@ -134,7 +124,7 @@ public class Payment {
         this.domainEvents.add(event);
     }
 
-    private void validateCaptureOperation(Money captureAmount) {
+    private void validateCaptureOperation() {
         if (!status.canBeCaptured()) {
             throw new IllegalPaymentStateException(
                     String.format("Cannot capture payment in status: %s", status));
@@ -144,12 +134,6 @@ public class Payment {
             throw new PaymentExpiredException("Cannot capture expired authorization");
         }
 
-        Money remainingAmount = getRemainingAuthorizationAmount();
-        if (captureAmount.isGreaterThan(remainingAmount)) {
-            throw new InsufficientAuthorizationException(
-                    String.format("Capture amount %s exceeds remaining authorization %s",
-                            captureAmount.getAmount(), remainingAmount.getAmount()));
-        }
     }
 
     // Getters

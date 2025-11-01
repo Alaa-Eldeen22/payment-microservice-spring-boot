@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 public enum PaymentStatus {
     PENDING("Payment is pending authorization"),
     AUTHORIZED("Payment is authorized, awaiting capture"),
-    PARTIALLY_CAPTURED("Payment is partially captured"),
     CAPTURED("Payment is fully captured"),
     FAILED("Payment authorization or capture failed"),
     VOIDED("Payment authorization was voided"),
@@ -29,11 +28,11 @@ public enum PaymentStatus {
     }
 
     public boolean canBeCaptured() {
-        return this == AUTHORIZED || this == PARTIALLY_CAPTURED;
+        return this == AUTHORIZED;
     }
 
     public boolean canBeVoided() {
-        return this == AUTHORIZED || this == PARTIALLY_CAPTURED;
+        return this == AUTHORIZED;
     }
 
     public boolean canBeRefunded() {
@@ -41,7 +40,7 @@ public enum PaymentStatus {
     }
 
     public boolean isActivePayment() {
-        return this == PENDING || this == AUTHORIZED || this == PARTIALLY_CAPTURED || this == CAPTURED;
+        return this == PENDING || this == AUTHORIZED || this == CAPTURED;
     }
 
     public static List<PaymentStatus> getActiveStatuses() {

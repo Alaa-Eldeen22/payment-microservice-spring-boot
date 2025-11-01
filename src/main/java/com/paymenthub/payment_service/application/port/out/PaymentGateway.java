@@ -12,7 +12,7 @@ public interface PaymentGateway {
             BigDecimal amount,
             String currency) throws PaymentGatewayException;
 
-    void capture(String gatewayReferenceId, BigDecimal amount) throws PaymentGatewayException;
+    void capture(String gatewayReferenceId) throws PaymentGatewayException;
 
     void voidAuthorization(String gatewayReferenceId) throws PaymentGatewayException;
 }

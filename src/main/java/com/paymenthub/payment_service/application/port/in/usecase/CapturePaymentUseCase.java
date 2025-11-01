@@ -1,8 +1,7 @@
 package com.paymenthub.payment_service.application.port.in.usecase;
 
-import com.paymenthub.payment_service.application.dto.request.CapturePaymentRequest;
-import com.paymenthub.payment_service.application.dto.response.CaptureResponse;
+import com.paymenthub.payment_service.application.port.in.command.CapturePaymentCommand;
 
 public interface CapturePaymentUseCase {
-    CaptureResponse execute(CapturePaymentRequest request);
+    void capture(CapturePaymentCommand request);
 }

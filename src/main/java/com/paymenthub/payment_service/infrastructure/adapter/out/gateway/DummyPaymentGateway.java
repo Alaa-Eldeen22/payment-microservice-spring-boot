@@ -43,8 +43,8 @@ public class DummyPaymentGateway implements PaymentGateway {
     }
 
     @Override
-    public void capture(String gatewayReferenceId, BigDecimal amount) throws PaymentGatewayException {
-        log.info("Dummy capture called: gatewayReferenceId={}, amount={}", gatewayReferenceId, amount);
+    public void capture(String gatewayReferenceId) throws PaymentGatewayException {
+        log.info("Dummy capture called: gatewayReferenceId={}, amount={}", gatewayReferenceId);
 
         if (gatewayReferenceId == null || gatewayReferenceId.isBlank()) {
             throw new PaymentGatewayException("Invalid gatewayReferenceId for capture", "INVALID_ID",

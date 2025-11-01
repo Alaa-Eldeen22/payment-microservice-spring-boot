@@ -1,8 +1,7 @@
 package com.paymenthub.payment_service.application.port.in.usecase;
 
-import com.paymenthub.payment_service.application.dto.request.VoidPaymentRequest;
-import com.paymenthub.payment_service.application.dto.response.VoidResponse;
+import com.paymenthub.payment_service.application.port.in.command.VoidPaymentCommand;
 
 public interface VoidPaymentUseCase {
-    VoidResponse execute(VoidPaymentRequest request);
+    void voidPayment(VoidPaymentCommand command);
 }

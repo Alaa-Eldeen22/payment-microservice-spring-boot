@@ -19,7 +19,7 @@ public class RabbitMQConfig {
     private String invoice_events_queue_name;
 
     @Value("${PAYMENT_QUEUE:payment_events}")
-    private String ipayment_events_queue_name;
+    private String payment_events_queue_name;
 
     @Value("${INVOICE_CREATED_ROUTING_KEY:invoice.created}")
     private String invoiceCreatedRoutingKey;
@@ -33,6 +33,12 @@ public class RabbitMQConfig {
     @Value("${PAYMENT_FAILED_ROUTING_KEY:payment.failed}")
     private String paymentFailedRoutingKey;
 
+    @Value("${PAYMENT_CAPTURED_ROUTING_KEY:payment.captured}")
+    private String paymentCapturedRoutingKey;
+
+    @Value("${PAYMENT_VOIDED_ROUTING_KEY:payment.voided}")
+    private String paymentVoidedRoutingKey;
+
     @Bean
     public TopicExchange invoiceExchange() {
         return new TopicExchange(exchangeName, true, false);
@@ -45,7 +51,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue paymentQueue() {
-        return new Queue(ipayment_events_queue_name, true);
+        return new Queue(payment_events_queue_name, true);
     }
 
     @Bean
@@ -77,6 +83,22 @@ public class RabbitMQConfig {
                 .bind(paymentQueue)
                 .to(invoiceExchange)
                 .with(paymentFailedRoutingKey);
+    }
+
+    @Bean
+    public Binding paymentCapturedBinding(Queue paymentQueue, TopicExchange invoiceExchange) {
+        return BindingBuilder
+                .bind(paymentQueue)
+                .to(invoiceExchange)
+                .with(paymentCapturedRoutingKey);
+    }
+
+    @Bean
+    public Binding paymentVoidedBinding(Queue paymentQueue, TopicExchange invoiceExchange) {
+        return BindingBuilder
+                .bind(paymentQueue)
+                .to(invoiceExchange)
+                .with(paymentVoidedRoutingKey);
     }
 
     @Bean
