@@ -94,7 +94,7 @@ public class OutboxRelay {
             publisher.publish(row.getExchange(), row.getRoutingKey(),
                     row.getBody().getBytes(StandardCharsets.UTF_8), properties(row));
             row.setAttempts(row.getAttempts() + 1);
-            row.setPublishedAt(now);
+            row.setPublishedAt(Instant.now()); // confirm time, not attempt start
             row.setLastError(null);
             MessagingLog.log(log, Level.INFO, "rmq.publish.ok", f);
             return true;
