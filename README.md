@@ -19,6 +19,7 @@ Built as a learning project to master enterprise-level software architecture, th
 - [Project Structure](#-project-structure)
 - [Domain Model](#-domain-model)
 - [Getting Started](#-getting-started)
+- [Messaging (RabbitMQ)](#-messaging-rabbitmq)
 - [What I Learned](#-what-i-learned)
 - [Future Enhancements](#-future-enhancements)
 
@@ -112,7 +113,7 @@ Adapters → Ports → Domain (Core) ← Ports ← Adapters
 
 - Consumes `InvoiceCreatedEvent` from message broker
 - Automatically initiates payment authorization
-- Supports idempotency (prevents duplicate charges)
+- Idempotent consumption: dedup on the message `idempotencyKey`, at-least-once delivery via a transactional outbox
 
 ### 2. **Manual Payment Retry**
 
@@ -339,38 +340,52 @@ docker run -d --name postgres \
 
 ### 3. Configure Application
 
-Create `application.yml`:
+Copy `.env.example` to `.env` (loaded by spring-dotenv). Every value has a default in `application.properties`:
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/payment_db
-    username: payment_user
-    password: payment_pass
+```env
+DB_URL=jdbc:postgresql://localhost:5432/payment_service_db
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+SPRING_PROFILE=dev                      # dev = DummyPaymentGateway (paymentMethodId "fail" declines)
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-
-payment:
-  gateway:
-    type: dummy # Use dummy gateway for testing
+# exchange/queue names are fixed by the messaging contract, not configurable
+RABBITMQ_URL=amqp://guest:guest@localhost:5672
+RABBITMQ_PREFETCH=10
+RABBITMQ_PUBLISH_TIMEOUT_MS=10000
+OUTBOX_POLL_INTERVAL_MS=1000
+OUTBOX_BATCH_SIZE=50
+# LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs # JSON logs incl. correlation/message ids
 ```
 
 ### 4. Build & Run
 
 ```bash
-# Build
-mvn clean package
-
-# Run
-java -jar target/payment-service-1.0.0.jar
-
-# Or with Maven
-mvn spring-boot:run
+./mvnw clean package          # runs unit + Testcontainers tests (needs Docker)
+java -jar target/payment-service-0.0.1-SNAPSHOT.jar
+# or
+./mvnw spring-boot:run
 ```
+
+---
+
+## 📨 Messaging (RabbitMQ)
+
+Messaging follows the shared **[messaging contract](https://github.com/Alaa-Eldeen22/invoice-microservice-nestjs/blob/main/docs/MESSAGING-CONTRACT.md)**. It is kept in the invoice repo, and in the local `invoicing/` workspace it's `../MESSAGING-CONTRACT.md`. Both services implement the same envelope, topology, retry and DLQ semantics. In short:
+
+- **Transactional outbox.** The `EventBus` port is implemented by `OutboxEventBus` (`@Transactional(propagation = MANDATORY)`). Events are rows in `outbox_messages`, written in the same transaction as the payment. `OutboxRelay` (`@Scheduled`, `FOR UPDATE SKIP LOCKED`) publishes with **correlated publisher confirms + mandatory returns** and marks a row sent only after a confirmed, routed publish.
+- **Consumer** `InvoiceEventsListener` on `payment-service.invoice-events` (quorum queue), `AckMode.MANUAL`. In one transaction it inserts the dedup row (`processed_messages`, `INSERT … ON CONFLICT DO NOTHING` on the envelope `idempotencyKey`) and runs the use case; it acks only after commit. Duplicates are skipped.
+- **Retries:** 3, through per-step TTL queues (5 s → 30 s → 2 min), then **DLQ** `payment-service.invoice-events.dlq` with `x-dlq-*` metadata. Malformed, unknown-type and unsupported-version messages go straight to the DLQ. `TooManyPaymentAttemptsException` is non-retryable. `DuplicatePaymentException` is a no-op ack.
+- A **gateway decline** commits the FAILED payment and publishes `payment.failed`. It used to roll both back.
+- **Observability:** one structured log line per step (`outbox.enqueued`, `rmq.publish.ok`, `rmq.consume.dead_lettered`, …). `cid`/`mid` from the MDC appear on every line. REST takes and returns `X-Correlation-Id`.
+
+| Doc | What |
+|---|---|
+| [MESSAGING-CONTRACT.md](https://github.com/Alaa-Eldeen22/invoice-microservice-nestjs/blob/main/docs/MESSAGING-CONTRACT.md) | envelope, topology, retry/DLQ, idempotency, versioning |
+| [docs/messaging-runbook.md](docs/messaging-runbook.md) | operators: inspect and replay the DLQ, failure modes in logs |
+| [docs/messaging-notes.md](docs/messaging-notes.md) | how messaging worked *before* this design (historical) |
+| invoice repo `docs/messaging-verification.md` | cross-service verification run |
+
+Tests: `MessageProcessorTest` (unit) and `MessagingFlowIntegrationTest` (Testcontainers RabbitMQ + Postgres: outbox, duplicates, decline, retry→DLQ, poison, unroutable).
 
 ## 💡 What I Learned
 
@@ -425,7 +440,8 @@ mvn spring-boot:run
 
 - [ ] Add comprehensive unit and integration tests
 - [ ] Implement real payment gateway integration (currently using dummy gateway)
-- [ ] Implement request/response logging and monitoring
+- [ ] Metrics for the messaging pipeline (log events are counter-ready; no metrics stack yet)
+- [ ] Pass a gateway idempotency key once a real gateway is integrated
 - [ ] Implement full/partial refunds
 - [ ] Handle async payment gateway callbacks useing webhooks
 

@@ -1,3 +1,5 @@
+> **Historical.** This describes messaging *before* the `feature/rmq-resilience` work. For the current design see the [messaging contract](../../MESSAGING-CONTRACT.md), the README, and [messaging-runbook.md](messaging-runbook.md).
+
 # Messaging notes — payment-microservice-spring-boot
 
 State of the service **before** the `feature/rmq-resilience` work. These are investigation notes. The target design is in [`../../MESSAGING-CONTRACT.md`](../../MESSAGING-CONTRACT.md).
