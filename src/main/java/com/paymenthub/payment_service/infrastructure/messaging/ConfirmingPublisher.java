@@ -45,8 +45,8 @@ public class ConfirmingPublisher {
                         "no queue bound for " + exchange + "/" + routingKey
                                 + " (" + correlation.getReturned().getReplyText() + ")");
             }
-            if (!confirm.ack()) {
-                throw new PublishFailedException("broker nacked: " + confirm.reason(), null);
+            if (!confirm.isAck()) {
+                throw new PublishFailedException("broker nacked: " + confirm.getReason(), null);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
