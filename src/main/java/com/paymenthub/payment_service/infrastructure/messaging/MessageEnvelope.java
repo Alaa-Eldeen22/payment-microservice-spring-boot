@@ -96,9 +96,13 @@ public record MessageEnvelope(
     }
 
     public static String requireText(JsonNode node, String field, int max) {
+        return requireText(node, "envelope." + field, field, max);
+    }
+
+    public static String requireText(JsonNode node, String label, String field, int max) {
         JsonNode value = node.get(field);
         if (value == null || !value.isTextual() || value.asText().isEmpty() || value.asText().length() > max) {
-            throw new MalformedMessageException(field + " must be a non-empty string");
+            throw new MalformedMessageException(label + " must be a non-empty string");
         }
         return value.asText();
     }
