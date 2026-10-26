@@ -39,8 +39,11 @@ public class AuthorizePaymentService {
             return savedPayment;
 
         } catch (PaymentGatewayException e) {
-            handleAuthorizationFailure(payment, e);
-            throw e;
+            // A decline is a business outcome, not an error: the FAILED
+            // attempt and its payment.failed event must commit. Rethrowing
+            // rolled both back while the old direct publish had already
+            // told the invoice service it failed.
+            return handleAuthorizationFailure(payment, e);
         }
     }
 
@@ -53,7 +56,7 @@ public class AuthorizePaymentService {
                 payment.getRequestedAmount().getCurrency().toString());
     }
 
-    private void handleAuthorizationFailure(Payment payment, PaymentGatewayException exception) {
+    private Payment handleAuthorizationFailure(Payment payment, PaymentGatewayException exception) {
         log.error("Authorization failed for payment ID: {} - Reason: {}",
                 payment.getId(), exception.getMessage());
 
@@ -61,8 +64,7 @@ public class AuthorizePaymentService {
 
         publishDomainEvents(payment);
 
-        paymentRepository.save(payment);
-
+        return paymentRepository.save(payment);
     }
 
     private void publishDomainEvents(Payment payment) {
